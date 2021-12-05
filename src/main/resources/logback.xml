@@ -9,7 +9,7 @@
     </appender>
 
     <appender name="file" class="ch.qos.logback.core.FileAppender">
-        <file>log/task3.log</file>
+        <file>log/minesweeper.log</file>
         <param name="Append" value="true"/>
         <encoder>
             <Charset>UTF-8</Charset>
@@ -18,7 +18,7 @@
     </appender>
 
 
-    <logger name="ru.cft.focusstart.task3" level="debug">
+    <logger name="ru.ateam.minesweeper" level="debug">
     </logger>
 
     <root level="info">

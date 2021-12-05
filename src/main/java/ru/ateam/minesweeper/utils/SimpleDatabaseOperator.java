@@ -8,8 +8,7 @@ import org.slf4j.LoggerFactory;
 import ru.ateam.minesweeper.enums.GameType;
 import ru.ateam.minesweeper.enums.UserStatus;
 import ru.ateam.minesweeper.model.MineFieldModel;
-import ru.ateam.minesweeper.utils.resultsdata.PlayerResults;
-import ru.ateam.minesweeper.utils.resultsdata.ResultsByGameType;
+import ru.ateam.minesweeper.utils.resultsdata.*;
 
 import java.io.*;
 
@@ -34,7 +33,10 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
     public SimpleDatabaseOperator(MineFieldModel model) {
         this.gson = new GsonBuilder()
                 .setPrettyPrinting()
+                .registerTypeAdapter(PlayerResults.class, new CustomPlayerResultSerializer())
+                .registerTypeAdapter(ResultsByGameType.class, new CustomPlayerResultByGameTypeSerializer())
                 .create();
+
 
 
         this.model = model;
@@ -84,7 +86,12 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
 
     private PlayerResults readDataFromFile(File readFile) {
         try (JsonReader reader = new JsonReader(new FileReader(readFile))) {
-            PlayerResults results = new Gson().fromJson(reader, PlayerResults.class);
+            PlayerResults results = new GsonBuilder()
+                    .registerTypeAdapter(ResultsByGameType.class, new CustomPlayerResultByGameTypeDeserializer())
+                    .registerTypeAdapter(PlayerResults.class, new CustomPlayerResultDeserializer())
+                    .create()
+                    .fromJson(reader, PlayerResults.class);
+
             return results;
 
         } catch (FileNotFoundException e) {
