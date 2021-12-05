@@ -25,10 +25,6 @@ public class ResultsByGameType {
         this.resultData.put(name, time);
     }
 
-    public void deleteResult(String name) {
-        this.resultData.remove(name);
-    }
-
     public ArrayList<Map.Entry<String, Integer>> getResultDataAsSortedmap() {
         return (ArrayList<Map.Entry<String, Integer>>) this.resultData.entrySet()
                 .stream()
@@ -51,5 +47,13 @@ public class ResultsByGameType {
             return true;
         }
         return false;
+    }
+
+    public Map<String, Integer> getResultData() {
+        return resultData;
+    }
+
+    public void setResultData(Map<String, Integer> resultData) {
+        this.resultData = resultData;
     }
 }

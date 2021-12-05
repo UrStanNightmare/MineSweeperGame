@@ -1,6 +1,5 @@
 package ru.ateam.minesweeper.utils.resultsdata;
 
-import com.google.gson.annotations.SerializedName;
 import ru.ateam.minesweeper.enums.GameType;
 
 import java.util.ArrayList;
@@ -8,15 +7,14 @@ import java.util.ArrayList;
 public class PlayerResults {
     private final static int maxResultLists = GameType.values().length;
 
-    @SerializedName("Game type based results")
-    private final ArrayList<ResultsByGameType> results;
+    private ArrayList<ResultsByGameType> results;
 
-    @SerializedName("Current user")
     private String localUsername;
 
 
     public PlayerResults() {
         this.results = new ArrayList<>(maxResultLists);
+        this.localUsername = null;
 
         for (GameType gameType : GameType.values()) {
             this.results.add(new ResultsByGameType(gameType));
@@ -49,5 +47,13 @@ public class PlayerResults {
 
     public ResultsByGameType getResultsByType(GameType gameType) {
         return this.findResultsListByGameType(gameType);
+    }
+
+    public ArrayList<ResultsByGameType> getResults() {
+        return results;
+    }
+
+    public void setResultsList(ArrayList<ResultsByGameType> resultsList) {
+        this.results = resultsList;
     }
 }

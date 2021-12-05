@@ -20,8 +20,9 @@ public class SimpleMusicPlayer implements AutoCloseable, ModelAudioListener {
     private volatile boolean forceStopped;
     private final String name;
 
-    public SimpleMusicPlayer(File file, Boolean autoplay) {
-        this.name = file.getName();
+    public SimpleMusicPlayer(String name, Boolean autoplay) {
+        this.name = name;
+        File file = new File(ClassLoader.getSystemResource(name).getPath());
         this.autoplay = autoplay;
         try {
             stream = AudioSystem.getAudioInputStream(file);

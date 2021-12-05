@@ -150,7 +150,9 @@ public class DefaultMineFieldModel implements MineFieldModel, TimerListener {
                             this.timer.stopTimer();
                             this.mineFieldData.changeCellType(x, y, GameImage.BOMB_ICON);
                             this.view.openLoseWindow();
-                            this.audioListener.play(true);
+                            if (this.audioListener != null) {
+                                this.audioListener.play(true);
+                            }
                         }
                     }
                 }
@@ -165,7 +167,9 @@ public class DefaultMineFieldModel implements MineFieldModel, TimerListener {
                                     this.firstClickPerformed = false;
                                     this.timer.stopTimer();
                                     this.view.openLoseWindow();
-                                    this.audioListener.play(true);
+                                    if (this.audioListener != null) {
+                                        this.audioListener.play(true);
+                                    }
                                 }
                             }
                         }
@@ -224,7 +228,9 @@ public class DefaultMineFieldModel implements MineFieldModel, TimerListener {
 
     @Override
     public void closeResources() {
-        this.audioListener.close();
+        if (this.audioListener != null) {
+            this.audioListener.close();
+        }
     }
 
     public boolean checkIfLocked() {

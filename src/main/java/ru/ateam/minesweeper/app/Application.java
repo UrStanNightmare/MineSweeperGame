@@ -9,7 +9,6 @@ import ru.ateam.minesweeper.utils.SimpleMusicPlayer;
 import ru.ateam.minesweeper.utils.SimpleTimer;
 import ru.ateam.minesweeper.view.SwingMinesweeperView;
 
-import java.io.File;
 import java.util.ArrayList;
 
 public class Application {
@@ -31,9 +30,14 @@ public class Application {
 
         model.registerTimer(timer);
 
-        SimpleMusicPlayer boomPlayer = new SimpleMusicPlayer(new File(ClassLoader.getSystemResource(boomMusicName).getPath()), false);
+        SimpleMusicPlayer boomPlayer = null;
 
+
+        boomPlayer = new SimpleMusicPlayer(boomMusicName, false);
         model.registerAudioListener(boomPlayer);
+
+        //File boomFile = new File(boomFilePath);
+
 
         view.show();
     }
