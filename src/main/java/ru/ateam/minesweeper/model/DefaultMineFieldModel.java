@@ -10,8 +10,8 @@ import ru.ateam.minesweeper.listeners.ModelAudioListener;
 import ru.ateam.minesweeper.listeners.TimerListener;
 import ru.ateam.minesweeper.utils.DefaultDatabaseOperator;
 import ru.ateam.minesweeper.utils.DefaultTimer;
-import ru.ateam.minesweeper.utils.RecordsData;
 import ru.ateam.minesweeper.utils.SimpleDatabaseOperator;
+import ru.ateam.minesweeper.utils.resultsdata.PlayerResults;
 import ru.ateam.minesweeper.view.MinesweeperView;
 
 import java.util.Map;
@@ -212,9 +212,9 @@ public class DefaultMineFieldModel implements MineFieldModel, TimerListener {
 
     @Override
     public void onHighScoreCommand() {
-        RecordsData data = this.db.getRecordsAsData();
+        PlayerResults data = this.db.getRecordsAsData();
 
-        this.view.openHighScoreWindow(data.getNameListsList(), data.getTimeListsList());
+        this.view.openHighScoreWindow(data);
     }
 
     @Override

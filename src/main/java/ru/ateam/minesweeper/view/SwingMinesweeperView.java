@@ -6,8 +6,7 @@ import ru.ateam.minesweeper.controller.MinesweeperGameController;
 import ru.ateam.minesweeper.enums.GameImage;
 import ru.ateam.minesweeper.enums.GameType;
 import ru.ateam.minesweeper.enums.UserStatus;
-
-import java.util.ArrayList;
+import ru.ateam.minesweeper.utils.resultsdata.PlayerResults;
 
 public class SwingMinesweeperView implements MinesweeperView {
     private final static Logger log = LoggerFactory.getLogger(SwingMinesweeperView.class.getName());
@@ -144,12 +143,9 @@ public class SwingMinesweeperView implements MinesweeperView {
     }
 
     @Override
-    public void openHighScoreWindow(ArrayList<ArrayList<String>> nameList, ArrayList<ArrayList<Integer>> timeList) {
+    public void openHighScoreWindow(PlayerResults data) {
         for (GameType type : GameType.values()) {
-            if (type.ordinal() >= nameList.size()) {
-                continue;
-            }
-            this.highScoresWindow.setRecordByType(type, nameList.get(type.ordinal()), timeList.get(type.ordinal()));
+            this.highScoresWindow.setRecordByType(type, data.getResultsByType(type));
         }
 
         this.highScoresWindow.setVisible(true);
