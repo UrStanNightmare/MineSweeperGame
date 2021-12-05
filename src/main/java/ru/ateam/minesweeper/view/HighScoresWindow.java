@@ -1,11 +1,13 @@
 package ru.ateam.minesweeper.view;
 
 import ru.ateam.minesweeper.enums.GameType;
+import ru.ateam.minesweeper.utils.resultsdata.ResultsByGameType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class HighScoresWindow extends JDialog {
     public final static String DEFAULT_RECORD_TEXT = "PLAYER - TIME";
@@ -67,10 +69,6 @@ public class HighScoresWindow extends JDialog {
         }
     }
 
-    public String createRecordText(String winnerName, int timeValue) {
-        return winnerName + " - " + timeValue;
-    }
-
     private JLabel createLabel(String labelText, GridBagLayout layout, int gridY, int margin) {
         JLabel label = new JLabel(labelText);
 
@@ -105,8 +103,10 @@ public class HighScoresWindow extends JDialog {
         return okButton;
     }
 
-    private void updateRecordsList(List<JLabel> list, List<String> usernames, List<Integer> times) {
-        int inputSize = usernames.size();
+    private void updateRecordsList(List<JLabel> list, ResultsByGameType data) {
+        ArrayList<Map.Entry<String, Integer>> dataArray = data.getResultDataAsSortedmap();
+
+        int inputSize = dataArray.size();
         if (inputSize > RECORDS_COUNT) {
             inputSize = RECORDS_COUNT;
         }
@@ -114,8 +114,8 @@ public class HighScoresWindow extends JDialog {
         for (int i = 0; i < inputSize; i++) {
             JLabel label = list.get(i);
 
-            String username = usernames.get(i);
-            Integer time = times.get(i);
+            String username = dataArray.get(i).getKey();
+            Integer time = dataArray.get(i).getValue();
 
             String text = username + " - " + time;
 
@@ -124,11 +124,11 @@ public class HighScoresWindow extends JDialog {
     }
 
 
-    public void setRecordByType(GameType type, List<String> usernames, List<Integer> times) {
+    public void setRecordByType(GameType type, ResultsByGameType data) {
         switch (type) {
-            case NOVICE -> this.updateRecordsList(this.noviceRecordsLabels, usernames, times);
-            case MEDIUM -> this.updateRecordsList(this.mediumRecordsLabels, usernames, times);
-            case EXPERT -> this.updateRecordsList(this.expertRecordsLabels, usernames, times);
+            case NOVICE -> this.updateRecordsList(this.noviceRecordsLabels, data);
+            case MEDIUM -> this.updateRecordsList(this.mediumRecordsLabels, data);
+            case EXPERT -> this.updateRecordsList(this.expertRecordsLabels, data);
         }
     }
 

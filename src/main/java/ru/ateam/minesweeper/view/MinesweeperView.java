@@ -3,8 +3,7 @@ package ru.ateam.minesweeper.view;
 import ru.ateam.minesweeper.enums.GameImage;
 import ru.ateam.minesweeper.enums.GameType;
 import ru.ateam.minesweeper.enums.UserStatus;
-
-import java.util.ArrayList;
+import ru.ateam.minesweeper.utils.resultsdata.PlayerResults;
 
 public interface MinesweeperView {
     void onTimeChanged(int time);
@@ -23,5 +22,5 @@ public interface MinesweeperView {
 
     void showChangeUsernameWindow();
 
-    void openHighScoreWindow(ArrayList<ArrayList<String>> nameList, ArrayList<ArrayList<Integer>> timeList);
+    void openHighScoreWindow(PlayerResults data);
 }
