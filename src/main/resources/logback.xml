@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <Charset>UTF-8</Charset>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{40} - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>log/task3.log</file>
+        <param name="Append" value="true"/>
+        <encoder>
+            <Charset>UTF-8</Charset>
+            <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{40} - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+
+    <logger name="ru.cft.focusstart.task3" level="debug">
+    </logger>
+
+    <root level="info">
+        <appender-ref ref="console"/>
+        <appender-ref ref="file"/>
+    </root>
+
+</configuration>
