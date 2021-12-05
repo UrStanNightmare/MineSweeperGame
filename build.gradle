@@ -34,11 +34,3 @@ jlink {
         name = 'Minesweeper'
     }
 }
-
-//tasks.jlink.doLast {
-//    copy {
-//        from('src/main/resources/music')
-////        into("$buildDir/image/bin")
-//        into("$buildDir")
-//    }
-//}
