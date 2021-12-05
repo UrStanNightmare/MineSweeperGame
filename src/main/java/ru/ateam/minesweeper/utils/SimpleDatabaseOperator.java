@@ -1,33 +1,26 @@
 package ru.ateam.minesweeper.utils;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ateam.minesweeper.enums.GameType;
 import ru.ateam.minesweeper.enums.UserStatus;
 import ru.ateam.minesweeper.model.MineFieldModel;
+import ru.ateam.minesweeper.utils.resultsdata.PlayerResults;
+import ru.ateam.minesweeper.utils.resultsdata.ResultsByGameType;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
     private final static Logger log = LoggerFactory.getLogger(SimpleDatabaseOperator.class.getName());
 
-    private final static int MAX_RECORDS_COUNT = 10;
-
     private final static String databaseDirPath = "db/";
-    private final static String databaseFileName = "task3.json";
-    private final static String currentUsernameKey = "current_user";
-    private final static String usernameKey = "username";
-    private final static String timeKey = "time";
-    private final static File databaseFile = new File(databaseDirPath + databaseFileName);
+    private final static String databaseName = "msdb.json";
+    private final static File databaseFile = new File(databaseDirPath + databaseName);
 
-    private final List<String> collectionNames = new ArrayList<>();
+    private PlayerResults playerResults;
 
     private final boolean needsRecreation;
 
@@ -35,7 +28,15 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
 
     private final MineFieldModel model;
 
+    private final Gson gson;
+
+
     public SimpleDatabaseOperator(MineFieldModel model) {
+        this.gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
+
+
         this.model = model;
         DirectoryBuilder directoryBuilder = new DirectoryBuilder(databaseFile);
         boolean directoryAvailable = directoryBuilder.buildAndVerify();
@@ -47,10 +48,6 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
             this.isAvailable = true;
 
             this.needsRecreation = directoryBuilder.isFileCreated();
-
-            for (GameType type : GameType.values()) {
-                this.collectionNames.add(type.toString());
-            }
         }
     }
 
@@ -68,63 +65,35 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
 
         if (this.needsRecreation) {
             log.info("Trying to create database.");
-            writeDataToFile(createDefaultDatabaseData());
+            this.playerResults = new PlayerResults();
+            this.saveDataToFile(databaseFile);
         }
 
-        JSONObject checkObject = readDataFromFile();
-        boolean mismatch = false;
-        for (String colName : collectionNames) {
-            if (!checkObject.containsKey(colName)) {
-                mismatch = true;
-                break;
-            }
-        }
-        if (!checkObject.containsKey(currentUsernameKey)) {
-            mismatch = true;
-        }
-
-
-        if (mismatch) {
-            log.info("Database is empty or damaged. Creating default database");
-            writeDataToFile(createDefaultDatabaseData());
-        }
+        this.playerResults = this.readDataFromFile(databaseFile);
 
     }
 
-    private JSONObject createDefaultDatabaseData() {
-        JSONObject data = new JSONObject();
-        for (String colName : collectionNames) {
-            JSONArray playerData = new JSONArray();
-            data.put(colName, playerData);
-        }
-        data.put(currentUsernameKey, null);
-        return data;
-    }
-
-    private void writeDataToFile(JSONObject object) {
-        try (FileWriter file = new FileWriter(databaseFile)) {
-            file.write(object.toJSONString());
+    private void saveDataToFile(File saveFile) {
+        String saveString = gson.toJson(this.playerResults);
+        try (FileWriter file = new FileWriter(saveFile)) {
+            file.write(saveString);
         } catch (IOException e) {
             log.error("Can't write player data to file. {}", e.getMessage(), e);
         }
     }
 
-    private JSONObject readDataFromFile() {
-        JSONObject data = null;
+    private PlayerResults readDataFromFile(File readFile) {
+        try (JsonReader reader = new JsonReader(new FileReader(readFile))) {
+            PlayerResults results = new Gson().fromJson(reader, PlayerResults.class);
+            return results;
 
-        JSONParser parser = new JSONParser();
-
-        try (Reader reader = new FileReader(databaseFile)) {
-            data = (JSONObject) parser.parse(reader);
         } catch (FileNotFoundException e) {
-            log.error("Can't find data file. {}", e.getMessage(), e);
+            log.error("Can't read db file! Created empty one {}", e.getMessage());
+            return new PlayerResults();
         } catch (IOException e) {
-            log.error("Can't read player data from file. {}", e.getMessage(), e);
-        } catch (ParseException e) {
-            log.error("Can't parse player data from file. {}", e.getMessage(), e);
+            log.error("{}. Created empty one!", e.getMessage(), e);
+            return new PlayerResults();
         }
-
-        return data;
     }
 
     /**
@@ -136,18 +105,9 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
      */
     @Override
     public void placeRecord(GameType type, String username, int time) {
-        JSONObject playerData = new JSONObject();
-        playerData.put(usernameKey, username);
-        playerData.put(timeKey, time);
+        this.playerResults.addResult(type, username, time);
 
-        JSONObject data = readDataFromFile();
-        JSONArray categoryArray = (JSONArray) data.get(type.toString());
-
-        categoryArray.add(playerData);
-
-        data.put(type.toString(), categoryArray);
-
-        writeDataToFile(data);
+        this.saveDataToFile(databaseFile);
 
         log.info("Added data to db: {}/{}:{}", type, username, time);
     }
@@ -159,14 +119,10 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
      * @return Массив результатов по игровому режиму
      */
     @Override
-    public JSONArray getRecords(GameType type) {
-        JSONObject data = readDataFromFile();
-
-        JSONArray categoryArray = (JSONArray) data.get(type.toString());
-        categoryArray.sort(new JsonUserDataComparator());
+    public ResultsByGameType getRecords(GameType type) {
 
         log.info("Returned {} record data ", type);
-        return categoryArray;
+        return this.playerResults.getResultsByType(type);
     }
 
     /**
@@ -176,10 +132,9 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
      */
     @Override
     public void changeCurrentUsername(String username) {
-        JSONObject data = readDataFromFile();
-        data.put(currentUsernameKey, username);
+        this.playerResults.setLocalUsername(username);
 
-        writeDataToFile(data);
+        this.saveDataToFile(databaseFile);
         log.info("Username updated.");
     }
 
@@ -191,10 +146,8 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
     @Override
     public String getStoredUsername() {
         log.info("Username returned from database.");
-        JSONObject data = readDataFromFile();
-        String username = (String) data.get(currentUsernameKey);
 
-        return username;
+        return this.playerResults.getLocalUsername();
     }
 
 
@@ -209,18 +162,14 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
      * @param time            Текущее время выигрыша пользователя.
      * @return Статус пользователя.
      */
-    private UserStatus isUserExistsAndResultIsBetter(JSONArray data, String currentUsername, int time) {
+    private UserStatus isUserExistsAndResultIsBetter(ResultsByGameType data, String currentUsername, int time) {
         log.info("Checking if player data needs to be written to database");
-        Iterator iter = data.iterator();
-        while (iter.hasNext()) {
-            JSONObject user = (JSONObject) iter.next();
-            if (user.containsKey(usernameKey) && user.containsValue(currentUsername)) {
-                long storedTime = (long) user.get(timeKey);
-                if (storedTime > time) {
-                    return UserStatus.USER_EXISTS_AND_RESULT_IS_BETTER;
-                }
-                return UserStatus.USER_EXISTS;
+
+        if (data.isUserExists(currentUsername)) {
+            if (data.isResultBetter(currentUsername, time)) {
+                return UserStatus.USER_EXISTS_AND_RESULT_IS_BETTER;
             }
+            return UserStatus.USER_EXISTS;
         }
         return UserStatus.USER_NOT_EXISTS;
     }
@@ -232,11 +181,11 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
      * @param localName Имя пользователя.
      * @param time      Время победы.
      * @return Статус игрока.
-     * @see #isUserExistsAndResultIsBetter(JSONArray, String, int)
+     * @see #isUserExistsAndResultIsBetter(ResultsByGameType, String, int)
      */
     @Override
     public UserStatus getUserStatus(GameType gameType, String localName, int time) {
-        JSONArray data = this.getRecords(gameType);
+        ResultsByGameType data = this.getRecords(gameType);
         UserStatus status = this.isUserExistsAndResultIsBetter(data, localName, time);
 
         return status;
@@ -246,43 +195,11 @@ public class SimpleDatabaseOperator implements DefaultDatabaseOperator {
      * Возвращает результаты всех игроков во всех режимах (MAX_RECORDS_COUNT штук для каждого режима) как объект RecordsData
      *
      * @return Объект RecordsData с данными.
-     * @see RecordsData
      */
     @Override
-    public RecordsData getRecordsAsData() {
-        //Ограничивается константой MAX_RECORDS_COUNT, чтобы не тянуть все результаты в программу. Не самый идеальный вариант.
-        ArrayList<ArrayList<String>> namesListsList = new ArrayList<>(GameType.values().length);
-        ArrayList<ArrayList<Integer>> timesListsList = new ArrayList<>(GameType.values().length);
-
-        int gameTypeIter = 0;
-        for (GameType type : GameType.values()) {
-            JSONArray playerDataByType = this.getRecords(type);
-            if (playerDataByType.size() > 0) {
-                List<String> namesList = new ArrayList<>(playerDataByType.size());
-                List<Integer> timeList = new ArrayList<>(playerDataByType.size());
-
-                int currentRecords = 0;
-
-                Iterator iter = playerDataByType.iterator();
-                while (iter.hasNext()) {
-                    if (currentRecords >= MAX_RECORDS_COUNT) {
-                        break;
-                    }
-                    JSONObject playerData = (JSONObject) iter.next();
-                    String name = (String) playerData.get("username");
-                    Long time = (Long) playerData.get("time");
-                    namesList.add(name);
-                    timeList.add(Math.toIntExact(time));
-                    currentRecords++;
-                }
-                namesListsList.add((ArrayList<String>) namesList);
-                timesListsList.add((ArrayList<Integer>) timeList);
-                gameTypeIter++;
-            }
-
-        }
-
-        return new RecordsData(namesListsList, timesListsList);
+    @Deprecated
+    public PlayerResults getRecordsAsData() {
+        return this.playerResults;
     }
 
 
