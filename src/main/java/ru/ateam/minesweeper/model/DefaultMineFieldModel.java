@@ -101,6 +101,8 @@ public class DefaultMineFieldModel implements MineFieldModel, TimerListener {
     public void onStartNewGame() {
         this.view.updateGameField(this.gameType);
         this.firstClickPerformed = false;
+        this.isWin = false;
+        this.isLocked = false;
         this.mineFieldData.prepareData(this.gameType);
 
     }
